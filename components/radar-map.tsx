@@ -1,6 +1,7 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
+import { MapPin } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 
@@ -118,6 +119,7 @@ const RadarMap: React.FC = () => {
     const clockInterval = setInterval(() => {
       setClock(new Date().toLocaleTimeString());
     }, 500);
+
     return () => clearInterval(clockInterval);
   }, []);
 
@@ -128,6 +130,18 @@ const RadarMap: React.FC = () => {
       </div>
       <div className="flex flex-col relative text-center bg-white text-black">
         <div id="map" className="w-full h-[600px] relative rounded-lg"></div>
+        <button
+          type="button"
+          onClick={() =>
+            navigator.geolocation.getCurrentPosition(function (position) {
+              console.log(position.coords.latitude, position.coords.longitude);
+            })
+          }
+          className="z-[999] flex items-center gap-x-2 bg-blue-500 right-4 bottom-32 sm:bottom-20 absolute text-white px-4 py-2 rounded-lg"
+        >
+          Se din plats på kartan
+          <MapPin />
+        </button>
         <p
           className="text-lg font-bold absolute top-4 right-4 z-[999]"
           id="timeLabel"
@@ -136,7 +150,7 @@ const RadarMap: React.FC = () => {
             ? "Om " + currentIndex * 10 + " min"
             : "För " + currentIndex * 10 * -1 + " min sedan"}
         </p>
-        <div className="flex absolute bottom-6 h-fit inset-x-0 px-4 w-full z-[999] gap-x-4">
+        <div className="flex absolute bottom-14 sm:bottom-6 h-fit inset-x-0 px-4 w-full z-[999] gap-x-4">
           <div className="flex justify-center w-full items-center bg-gray-200 rounded-lg px-4 gap-2">
             <input
               type="range"
