@@ -109,7 +109,7 @@ const RadarMap: React.FC = () => {
       if (!isPaused) {
         setCurrentIndex((prevIndex) => (prevIndex >= 6 ? -6 : prevIndex + 1));
       }
-    }, 1000);
+    }, 500);
     return () => clearInterval(interval);
   }, [isPaused]);
 
@@ -122,40 +122,46 @@ const RadarMap: React.FC = () => {
 
     const clockInterval = setInterval(() => {
       setClock(new Date().toLocaleTimeString());
-    }, 1000);
+    }, 500);
     return () => clearInterval(clockInterval);
   }, []);
 
   return (
-    <div className="flex flex-col items-center text-center bg-white text-black">
+    <>
       <div className="fixed top-2 right-2 bg-white p-2 rounded shadow-md z-50">
         <span>{clock}</span>
       </div>
-      <h2 className="text-xl font-bold mt-4">Regnradar Norden</h2>
-      <div className="flex justify-center items-center bg-gray-200 p-4 mt-4 gap-2">
-        <span>-1h</span>
-        <input
-          type="range"
-          min="-6"
-          max="6"
-          value={currentIndex}
-          step="1"
-          onChange={(e) => setCurrentIndex(Number(e.target.value))}
-          className="w-2/3"
-        />
-        <span>+1h</span>
+      <div className="flex flex-col relative text-center bg-white text-black">
+        <div id="map" className="w-full h-[600px] relative rounded-lg"></div>
+        <p
+          className="text-lg font-bold absolute top-4 right-4 z-[999]"
+          id="timeLabel"
+        >
+          {currentIndex * 10 > 0
+            ? "Om " + currentIndex * 10 + " min"
+            : "För " + currentIndex * 10 * -1 + " min sedan"}
+        </p>
+        <div className="flex absolute bottom-6 h-fit inset-x-0 px-4 w-full z-[999] gap-x-4">
+          <div className="flex justify-center w-full items-center bg-gray-200 rounded-lg px-4 gap-2">
+            <input
+              type="range"
+              min="-6"
+              max="6"
+              value={currentIndex}
+              step="1"
+              onChange={(e) => setCurrentIndex(Number(e.target.value))}
+              className="w-full"
+            />
+          </div>
+          <button
+            onClick={() => setIsPaused(!isPaused)}
+            className="h-full px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600"
+          >
+            {isPaused ? "Spela" : "Pausa"}
+          </button>
+        </div>
       </div>
-      <p className="text-lg font-bold" id="timeLabel">
-        {currentIndex * 10} min
-      </p>
-      <button
-        onClick={() => setIsPaused(!isPaused)}
-        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md shadow hover:bg-blue-600"
-      >
-        {isPaused ? "Spela" : "Pausa"}
-      </button>
-      <div id="map" className="w-full h-[600px] mt-4"></div>
-    </div>
+    </>
   );
 };
 
