@@ -15,7 +15,7 @@ const RadarMap: React.FC = () => {
   const mapRef = useRef<L.Map | null>(null);
   const radarLayerRef = useRef<L.TileLayer | null>(null);
   const [radarFrames, setRadarFrames] = useState<RadarFrame[] | null>(null);
-  const [currentIndex, setCurrentIndex] = useState<number>(-6);
+  const [currentIndex, setCurrentIndex] = useState<number>(-12);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [clock, setClock] = useState<string>(new Date().toLocaleTimeString());
   const rainViewerHost = useRef<string | null>(null);
@@ -27,18 +27,12 @@ const RadarMap: React.FC = () => {
       mapRef.current = L.map("map", {
         center: [63.0, 14.0],
         zoom: 5,
-        maxBounds: [
-          [54, 3],
-          [71, 31],
-        ],
-        maxBoundsViscosity: 1.0,
       });
 
       L.tileLayer(
         "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
         {
           attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
-          maxZoom: 19,
         }
       ).addTo(mapRef.current);
     }
@@ -94,12 +88,13 @@ const RadarMap: React.FC = () => {
     const tileUrl = `${rainViewerHost.current}${frame.path}/256/{z}/{x}/{y}/5/1_0.png`;
 
     if (radarLayerRef.current) {
-      mapRef.current?.removeLayer(radarLayerRef.current);
+      radarLayerRef.current.setUrl(tileUrl, false);
+    } else {
+      radarLayerRef.current = L.tileLayer(tileUrl, {
+        opacity: 0.7,
+        attribution: "Radar data © RainViewer",
+      }).addTo(mapRef.current!);
     }
-    radarLayerRef.current = L.tileLayer(tileUrl, {
-      opacity: 0.7,
-      attribution: "Radar data © RainViewer",
-    }).addTo(mapRef.current!);
   };
 
   useEffect(() => {
@@ -107,7 +102,7 @@ const RadarMap: React.FC = () => {
 
     const interval = setInterval(() => {
       if (!isPaused) {
-        setCurrentIndex((prevIndex) => (prevIndex >= 6 ? -6 : prevIndex + 1));
+        setCurrentIndex((prevIndex) => (prevIndex >= 3 ? -12 : prevIndex + 1));
       }
     }, 500);
     return () => clearInterval(interval);
@@ -145,8 +140,8 @@ const RadarMap: React.FC = () => {
           <div className="flex justify-center w-full items-center bg-gray-200 rounded-lg px-4 gap-2">
             <input
               type="range"
-              min="-6"
-              max="6"
+              min="-12"
+              max="3"
               value={currentIndex}
               step="1"
               onChange={(e) => setCurrentIndex(Number(e.target.value))}
