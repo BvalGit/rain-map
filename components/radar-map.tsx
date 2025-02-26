@@ -14,13 +14,15 @@ interface RadarFrame {
 
 const RadarMap: React.FC = () => {
   const mapRef = useRef<L.Map | null>(null);
-  const radarLayerRef = useRef<L.TileLayer | null>(null);
+  const currentLayerRef = useRef<L.TileLayer | null>(null);
+  const nextLayerRef = useRef<L.TileLayer | null>(null);
   const [radarFrames, setRadarFrames] = useState<RadarFrame[] | null>(null);
   const [currentIndex, setCurrentIndex] = useState<number>(-12);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [clock, setClock] = useState<string>(new Date().toLocaleTimeString());
   const rainViewerHost = useRef<string | null>(null);
 
+  /** Initialize the map */
   useEffect(() => {
     if (typeof window === "undefined" || !L) return;
 
@@ -39,6 +41,7 @@ const RadarMap: React.FC = () => {
     }
   }, []);
 
+  /** Fetch radar frames */
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -61,9 +64,11 @@ const RadarMap: React.FC = () => {
         console.error("Failed to fetch radar data:", error);
       }
     };
+
     fetchRadarData();
   }, []);
 
+  /** Find closest radar frame to timestamp */
   const findClosestFrame = (frames: RadarFrame[], targetTimestamp: number) => {
     return frames.reduce((prev, curr) =>
       Math.abs(curr.time - targetTimestamp) <
@@ -73,6 +78,7 @@ const RadarMap: React.FC = () => {
     );
   };
 
+  /** Update radar layer with smooth transition */
   const updateMapByIndex = (index: number) => {
     if (
       !radarFrames ||
@@ -80,24 +86,40 @@ const RadarMap: React.FC = () => {
       typeof window === "undefined"
     )
       return;
+
     let minutesOffset = index * 10;
     const targetTimestamp = Math.floor(
       (Date.now() + minutesOffset * 60000) / 1000
     );
     const frame = findClosestFrame(radarFrames, targetTimestamp);
-
     const tileUrl = `${rainViewerHost.current}${frame.path}/256/{z}/{x}/{y}/5/1_0.png`;
 
-    if (radarLayerRef.current) {
-      radarLayerRef.current.setUrl(tileUrl, false);
+    // Create new layer with fade-in effect
+    if (nextLayerRef.current) {
+      nextLayerRef.current.setUrl(tileUrl);
+      nextLayerRef.current.setOpacity(0.7);
+
+      // Swap layers after fade-in
+      setTimeout(() => {
+        if (currentLayerRef.current) {
+          mapRef.current?.removeLayer(currentLayerRef.current);
+        }
+        currentLayerRef.current = nextLayerRef.current;
+        nextLayerRef.current = null;
+      }, 500);
     } else {
-      radarLayerRef.current = L.tileLayer(tileUrl, {
-        opacity: 0.7,
+      nextLayerRef.current = L.tileLayer(tileUrl, {
+        opacity: 0,
         attribution: "Radar data © RainViewer",
       }).addTo(mapRef.current!);
+
+      setTimeout(() => {
+        nextLayerRef.current?.setOpacity(0.7);
+      }, 200);
     }
   };
 
+  /** Animation logic */
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -105,20 +127,23 @@ const RadarMap: React.FC = () => {
       if (!isPaused) {
         setCurrentIndex((prevIndex) => (prevIndex >= 3 ? -12 : prevIndex + 1));
       }
-    }, 500);
+    }, 1500); // Increased transition time for smooth effect
+
     return () => clearInterval(interval);
   }, [isPaused]);
 
+  /** Update radar frame */
   useEffect(() => {
     updateMapByIndex(currentIndex);
   }, [currentIndex, radarFrames]);
 
+  /** Update clock */
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const clockInterval = setInterval(() => {
       setClock(new Date().toLocaleTimeString());
-    }, 500);
+    }, 1000);
 
     return () => clearInterval(clockInterval);
   }, []);
@@ -133,7 +158,7 @@ const RadarMap: React.FC = () => {
         <button
           type="button"
           onClick={() =>
-            navigator.geolocation.getCurrentPosition(function (position) {
+            navigator.geolocation.getCurrentPosition((position) => {
               console.log(position.coords.latitude, position.coords.longitude);
             })
           }
@@ -142,13 +167,10 @@ const RadarMap: React.FC = () => {
           Se din plats på kartan
           <MapPin />
         </button>
-        <p
-          className="text-lg font-bold absolute top-4 right-4 z-[999]"
-          id="timeLabel"
-        >
+        <p className="text-lg font-bold absolute top-4 right-4 z-[999]">
           {currentIndex * 10 > 0
-            ? "Om " + currentIndex * 10 + " min"
-            : "För " + currentIndex * 10 * -1 + " min sedan"}
+            ? `Om ${currentIndex * 10} min`
+            : `För ${-currentIndex * 10} min sedan`}
         </p>
         <div className="flex absolute bottom-14 sm:bottom-6 h-fit inset-x-0 px-4 w-full z-[999] gap-x-4">
           <div className="flex justify-center w-full items-center bg-gray-200 rounded-lg px-4 gap-2">
