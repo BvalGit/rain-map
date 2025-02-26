@@ -78,7 +78,7 @@ const RadarMap: React.FC = () => {
     );
   };
 
-  /** Update radar layer with smooth transition */
+  /** Update radar layer with ultra-fast transition */
   const updateMapByIndex = (index: number) => {
     if (
       !radarFrames ||
@@ -94,19 +94,19 @@ const RadarMap: React.FC = () => {
     const frame = findClosestFrame(radarFrames, targetTimestamp);
     const tileUrl = `${rainViewerHost.current}${frame.path}/256/{z}/{x}/{y}/5/1_0.png`;
 
-    // Create new layer with fade-in effect
+    // Create new layer with ultra-fast fade-in effect
     if (nextLayerRef.current) {
       nextLayerRef.current.setUrl(tileUrl);
       nextLayerRef.current.setOpacity(0.7);
 
-      // Swap layers after fade-in
+      // Swap layers faster (200ms instead of 300ms)
       setTimeout(() => {
         if (currentLayerRef.current) {
           mapRef.current?.removeLayer(currentLayerRef.current);
         }
         currentLayerRef.current = nextLayerRef.current;
         nextLayerRef.current = null;
-      }, 500);
+      }, 200);
     } else {
       nextLayerRef.current = L.tileLayer(tileUrl, {
         opacity: 0,
@@ -115,11 +115,11 @@ const RadarMap: React.FC = () => {
 
       setTimeout(() => {
         nextLayerRef.current?.setOpacity(0.7);
-      }, 200);
+      }, 100);
     }
   };
 
-  /** Animation logic */
+  /** Animation logic (4x Speed - Ultra Fast) */
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -127,7 +127,7 @@ const RadarMap: React.FC = () => {
       if (!isPaused) {
         setCurrentIndex((prevIndex) => (prevIndex >= 3 ? -12 : prevIndex + 1));
       }
-    }, 1500); // Increased transition time for smooth effect
+    }, 500); // 🚀 4x Speed (500ms instead of 1500ms)
 
     return () => clearInterval(interval);
   }, [isPaused]);
