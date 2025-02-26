@@ -1,3 +1,5 @@
+"use client";
+
 import RadarMap from "@/components/radar-map";
 import {
   AlertTriangle,
@@ -17,6 +19,14 @@ import {
   Smartphone,
   Zap,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+
+// Declare adsbygoogle on the global Window interface
+declare global {
+  interface Window {
+    adsbygoogle: object[];
+  }
+}
 
 const reflectivityLevels = [
   { level: "Lätt", color: "bg-green-500", range: "0,08-0,1 mm/timme" },
@@ -27,6 +37,49 @@ const reflectivityLevels = [
 ];
 
 export default function Home() {
+  const [adLoadAttempts, setAdLoadAttempts] = useState(0);
+
+  // Function to load ads and retry if not loaded
+  const loadAdsWithRetry = () => {
+    const maxRetries = 5;
+    const retryInterval = 1000; // 1 second delay
+
+    const loadAds = () => {
+      try {
+        if (window.adsbygoogle) {
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+          console.log("Ads loaded");
+        }
+      } catch (err) {
+        console.error("Adsbygoogle failed to load:", err);
+      }
+    };
+
+    const retryAdLoading = () => {
+      if (adLoadAttempts < maxRetries) {
+        setTimeout(() => {
+          loadAds();
+          setAdLoadAttempts(adLoadAttempts + 1);
+        }, retryInterval);
+      } else {
+        console.warn("Max retries for ad loading reached");
+      }
+    };
+
+    // First attempt
+    loadAds();
+
+    // Retry if necessary
+    if (adLoadAttempts < maxRetries) {
+      retryAdLoading();
+    }
+  };
+
+  // Trigger ad loading after listings have loaded
+  useEffect(() => {
+    loadAdsWithRetry();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -36,10 +89,34 @@ export default function Home() {
         </div>
       </header>
 
+      <div className="flex w-full flex-col gap-y-3">
+        <p className="text-center">Annons</p>
+        <ins
+          className="adsbygoogle"
+          style={{ display: "block" }}
+          data-ad-format="fluid"
+          data-ad-layout-key="-fb+5w+4e-db+86"
+          data-ad-client="ca-pub-5578135265480546"
+          data-ad-slot="4810609678"
+        ></ins>
+      </div>
+
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Radar Map */}
         <div className="mb-8">
           <RadarMap />
+
+          <div className="flex w-full flex-col gap-y-3">
+            <p className="text-center">Annons</p>
+            <ins
+              className="adsbygoogle"
+              style={{ display: "block" }}
+              data-ad-format="fluid"
+              data-ad-layout-key="-fb+5w+4e-db+86"
+              data-ad-client="ca-pub-5578135265480546"
+              data-ad-slot="6935006294"
+            ></ins>
+          </div>
 
           <h1 className="text-3xl font-bold text-center text-gray-900 my-8">
             Regnradar - Följ nederbörden i realtid och prognosen framåt
@@ -60,6 +137,18 @@ export default function Home() {
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="flex w-full flex-col gap-y-3">
+            <p className="text-center">Annons</p>
+            <ins
+              className="adsbygoogle"
+              style={{ display: "block" }}
+              data-ad-format="fluid"
+              data-ad-layout-key="-fb+5w+4e-db+86"
+              data-ad-client="ca-pub-5578135265480546"
+              data-ad-slot="8393990831"
+            ></ins>
           </div>
 
           {/* Information Sections */}
@@ -323,12 +412,36 @@ export default function Home() {
             </section>
           </div>
 
+          <div className="flex w-full flex-col gap-y-3">
+            <p className="text-center">Annons</p>
+            <ins
+              className="adsbygoogle"
+              style={{ display: "block" }}
+              data-ad-format="fluid"
+              data-ad-layout-key="-fb+5w+4e-db+86"
+              data-ad-client="ca-pub-5578135265480546"
+              data-ad-slot="6404691128"
+            ></ins>
+          </div>
+
           <div className="bg-blue-50 p-4 rounded-lg">
             <p className="text-sm text-blue-800">
               Radaranimationen visar nederbördsintensitet över Norden. Bilden
               uppdateras automatiskt var 5:e minut. Starkare färger indikerar
               kraftigare nederbörd.
             </p>
+          </div>
+
+          <div className="flex w-full flex-col gap-y-3">
+            <p className="text-center">Annons</p>
+            <ins
+              className="adsbygoogle"
+              style={{ display: "block" }}
+              data-ad-format="fluid"
+              data-ad-layout-key="-fb+5w+4e-db+86"
+              data-ad-client="ca-pub-5578135265480546"
+              data-ad-slot="1145992566"
+            ></ins>
           </div>
         </div>
 
@@ -372,6 +485,18 @@ export default function Home() {
           </div>
         </div>
 
+        <div className="flex w-full flex-col gap-y-3">
+          <p className="text-center">Annons</p>
+          <ins
+            className="adsbygoogle"
+            style={{ display: "block" }}
+            data-ad-format="fluid"
+            data-ad-layout-key="-fb+5w+4e-db+86"
+            data-ad-client="ca-pub-5578135265480546"
+            data-ad-slot="4810609678"
+          ></ins>
+        </div>
+
         {/* Additional Info */}
         <div className="mt-12 bg-blue-50 rounded-lg p-6 flex items-start">
           <Info className="h-6 w-6 text-blue-600 mr-4 flex-shrink-0 mt-1" />
@@ -381,6 +506,18 @@ export default function Home() {
             utomhusevenemang eller bara vill veta om du behöver ett paraply, har
             Regnkarta dig täckt!
           </p>
+        </div>
+
+        <div className="flex w-full flex-col gap-y-3">
+          <p className="text-center">Annons</p>
+          <ins
+            className="adsbygoogle"
+            style={{ display: "block" }}
+            data-ad-format="fluid"
+            data-ad-layout-key="-fb+5w+4e-db+86"
+            data-ad-client="ca-pub-5578135265480546"
+            data-ad-slot="6935006294"
+          ></ins>
         </div>
       </main>
     </div>
