@@ -17,6 +17,7 @@ const RadarMap: React.FC = () => {
   const layersRef = useRef<L.TileLayer[]>([]);
   const markerRef = useRef<L.Marker | null>(null);
   const [radarFrames, setRadarFrames] = useState<RadarFrame[] | null>(null);
+  // Vi fortsätter med currentIndex som tidsskillnad (i steg om 10 minuter)
   const [currentIndex, setCurrentIndex] = useState<number>(-12);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [clock, setClock] = useState<string>(new Date().toLocaleTimeString());
@@ -190,8 +191,10 @@ const RadarMap: React.FC = () => {
 
         const customIcon = L.icon({
           iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-          iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-          shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+          iconRetinaUrl:
+            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+          shadowUrl:
+            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
           iconSize: [25, 41],
           iconAnchor: [12, 41],
           popupAnchor: [1, -34],
@@ -199,7 +202,7 @@ const RadarMap: React.FC = () => {
         });
 
         markerRef.current = L.marker([latitude, longitude], { icon: customIcon }).addTo(mapRef.current);
-        mapRef.current.setView([latitude, longitude], 9); // Ändrat till 9 för att zooma ut ett steg
+        mapRef.current.setView([latitude, longitude], 7); // Zoomar ut till nivå 7
 
         setIsLoading(false);
       },
@@ -211,23 +214,29 @@ const RadarMap: React.FC = () => {
     );
   };
 
-  // Schema för WeatherForecast (regnradarbilder)
-  const weatherForecastSchema =
-    radarFrames &&
-    rainViewerHost.current &&
-    radarFrames[currentIndex]?.time !== undefined
-      ? {
-          "@context": "https://schema.org/",
-          "@type": "WeatherForecast",
-          "name": "Regnradar för Sverige och världen",
-          "url": "https://regnkarta.se/regnradar",
-          "datePublished": new Date(radarFrames[currentIndex].time * 1000).toISOString(),
-          "location": {
-            "@type": "Place",
-            "name": "Sweden",
-          },
-        }
+  // Beräkna aktuell radarbild baserat på currentIndex
+  const currentFrame =
+    radarFrames && rainViewerHost.current
+      ? findClosestFrame(
+          radarFrames,
+          Math.floor((Date.now() + currentIndex * 10 * 60000) / 1000)
+        )
       : null;
+
+  // Skapa schema baserat på den beräknade bilden
+  const weatherForecastSchema = currentFrame
+    ? {
+        "@context": "https://schema.org/",
+        "@type": "WeatherForecast",
+        "name": "Regnradar för Sverige och världen",
+        "url": "https://regnkarta.se/regnradar",
+        "datePublished": new Date(currentFrame.time * 1000).toISOString(),
+        "location": {
+          "@type": "Place",
+          "name": "Sweden",
+        },
+      }
+    : null;
 
   return (
     <>
@@ -286,12 +295,12 @@ const RadarMap: React.FC = () => {
           </div>
           <button
             onClick={() => setIsPaused(!isPaused)}
-            className="h-full px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600"
+            className="h-full min-w-[60px] sm:min-w-[80px] px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 flex items-center justify-center"
           >
             {isPaused ? (
-              <PlayIcon className="h-5 w-5" />
+              <PlayIcon className="h-6 w-6" />
             ) : (
-              <PauseIcon className="h-5 w-5" />
+              <PauseIcon className="h-6 w-6" />
             )}
           </button>
         </div>

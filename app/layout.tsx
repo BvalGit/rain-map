@@ -8,9 +8,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Se exakt var det kommer att regna",
+  title: "Regnradar - Se live var det regnar med prognos",
   description:
-    "Regnradar över Sverige. Se prognos och live just nu var det kommer att regna via karta. På regnkarta.se ser du hur nederbördsområden med regn eller snö rör sig över Sverige.",
+    "Regnradar över Sverige och världen. Se var det regnar just nu tillsammans med framtidsprognos med hjälp av vår radar.",
   metadataBase: new URL(BASE_URL),
   alternates: {
     canonical: "./",
