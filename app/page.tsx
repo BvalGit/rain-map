@@ -158,9 +158,15 @@ export default function Home() {
               </h2>
               <div className="prose max-w-none">
                 <p className="text-gray-600 mb-6">
-                  Regnradar är en avancerad teknologisk apparatur som spelar en
+                Regnradar är en avancerad teknologisk apparatur som spelar en
                   avgörande roll inom meteorologin genom att använda radarbilder
-                  för att övervaka regn, dess intensitet och rörelsemönster...
+                  för att övervaka regn, dess intensitet och rörelsemönster.
+                  Genom att analysera data från en regnradar kan meteorologer
+                  förutse var och när regn kommer att falla, vilket är särskilt
+                  viktigt för väderprognoser, varningar vid kraftigt regn och
+                  planering inom olika verksamheter. Med en regnradar kan du i
+                  realtid följa regnets utveckling, se nederbördsområdens
+                  utbredning och få en bild av hur vädret förändras över tid.
                 </p>
 
                 <div className="grid md:grid-cols-3 gap-8 mt-8">
@@ -170,8 +176,7 @@ export default function Home() {
                       Dopplerteknik och regnradar
                     </h3>
                     <p className="text-sm text-gray-600 pb-2">
-                      Dopplertekniken är en central komponent i regnradarsystem...
-                    </p>
+                    Dopplertekniken är en central komponent i regnradarsystem, vilket möjliggör noggrann övervakning av regn och dess rörelse. Genom att analysera förändringar i radarvågornas frekvens kan regnradarn inte bara upptäcka nederbörd utan även ge värdefull information om vindmönster och regnets intensitet.                    </p>
                     <img className="rounded-lg mt-auto pt-1" src="/regnradar.webp" alt="Regnradar" />
                   </div>
 
@@ -181,8 +186,11 @@ export default function Home() {
                       Regnradarstationer i Norden
                     </h3>
                     <p className="text-sm text-gray-600">
-                      Norden har ett välutvecklat nätverk av regnradarstationer...
-                    </p>
+                    Norden har ett välutvecklat nätverk av regnradarstationer
+                      som täcker Sverige, Norge och Finland. Dessa
+                      radarstationer arbetar tillsammans för att ge en
+                      heltäckande bild av regn och nederbörd i realtid, vilket
+                      förbättrar väderprognoser och varningar för kraftigt regn.                    </p>
                     <img className="rounded-lg mt-auto pt-1" src="/regnradarstation.webp" alt="Regnradarstation" />
                   </div>
 
@@ -192,8 +200,12 @@ export default function Home() {
                       Räckvidd och täckning
                     </h3>
                     <p className="text-sm text-gray-600">
-                      En regnradarstation har en räckvidd på cirka 24 mil...
-                    </p>
+                    En regnradarstation har en räckvidd på cirka 24 mil och
+                      kan effektivt detektera regn och nederbörd inom detta
+                      område. Genom att kombinera data från flera radarstationer
+                      skapas en mer detaljerad och exakt bild av regnvädret,
+                      vilket hjälper både meteorologer och allmänheten att följa
+                      regnets utveckling.                    </p>
                     <img className="rounded-lg mt-auto pt-1" src="/regnradar-i-sverige.webp" alt="Regnradar i Sverige" />
                   </div>
                 </div>
@@ -209,11 +221,24 @@ export default function Home() {
               <div className="grid md:grid-cols-2 gap-8">
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Atmosfäriska störningar</h3>
-                  <p className="text-gray-600">Olika atmosfäriska förhållanden kan påverka...</p>
+                  <p className="text-gray-600"> Olika atmosfäriska förhållanden kan påverka regnradarns
+                    noggrannhet och förmåga att ge en tydlig bild av regn och
+                    nederbörd. Starka vindar, temperaturinversioner och kraftiga
+                    åskoväder kan orsaka störningar i radarsignalen. I vissa
+                    fall kan även fukt i luften reflektera radarsignaler på ett
+                    sätt som gör att regnradarn registrerar falska ekon, vilket
+                    kan påverka prognosens tillförlitlighet.</p>
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Tekniska problem och begränsningar</h3>
-                  <p className="text-gray-600">En regnradarstation kan tillfälligt vara ur drift...</p>
+                  <p className="text-gray-600"> En regnradarstation kan tillfälligt vara ur drift på grund
+                    av tekniska problem, underhåll eller extrema
+                    väderförhållanden. Dessutom kan berg, höga byggnader eller
+                    andra hinder blockera radarsignaler och skapa skuggområden
+                    där regnradarn har svårt att detektera nederbörd. För att
+                    minimera dessa begränsningar används flera
+                    regnradarstationer tillsammans för att skapa en mer
+                    heltäckande och exakt bild av regnvädret.</p>
                 </div>
               </div>
             </section>
@@ -226,15 +251,15 @@ export default function Home() {
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold">Kolla in aktuell nederbörd</h3>
-                  <p className="text-gray-600">Få en översikt över var det regnar just nu...</p>
+                  <p className="text-gray-600">Få en översikt över var det regnar just nu</p>
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold">Planera dina aktiviteter</h3>
-                  <p className="text-gray-600">Undvik regnskurar och planera dina utomhusaktiviteter...</p>
+                  <p className="text-gray-600">Undvik regnskurar och planera dina utomhusaktiviteter</p>
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold">Följ väderförändringar</h3>
-                  <p className="text-gray-600">Var förberedd på väderförändringar...</p>
+                  <p className="text-gray-600">Var förberedd på väderförändringar</p>
                 </div>
               </div>
             </section>
@@ -245,7 +270,117 @@ export default function Home() {
                 FAQ – Vanliga frågor om regnradar och regn
               </h2>
               <div className="grid md:grid-cols-2 gap-8">
-                {/* FAQ-innehållet förkortas här */}
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                      <Radar className="h-5 w-5 text-blue-600" />
+                      1. Vad är en regnradar?
+                    </h3>
+                    <p className="text-gray-600">
+                      En regnradar är ett meteorologiskt verktyg som används för
+                      att övervaka regn och nederbörd i realtid.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                      <Zap className="h-5 w-5 text-blue-600" />
+                      2. Hur fungerar en regnradar?
+                    </h3>
+                    <p className="text-gray-600">
+                      Regnradarn sänder ut radiosignaler som reflekteras av
+                      regndroppar, vilket gör det möjligt att mäta regnets
+                      intensitet, rörelse och utbredning.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                      <BarChart className="h-5 w-5 text-blue-600" />
+                      3. Hur noggrann är en regnradar?
+                    </h3>
+                    <p className="text-gray-600">
+                      Regnradar är mycket exakt för att detektera regn men kan
+                      påverkas av atmosfäriska störningar och fysiska hinder som
+                      berg och höga byggnader.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                      <Clock className="h-5 w-5 text-blue-600" />
+                      4. Kan en regnradar förutse regn?
+                    </h3>
+                    <p className="text-gray-600">
+                      Ja, genom att analysera nederbördens rörelse kan
+                      regnradarn ge en korttidsprognos för var regn väntas falla
+                      inom de närmaste timmarna.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                      <Eye className="h-5 w-5 text-blue-600" />
+                      5. Hur långt kan en regnradar se?
+                    </h3>
+                    <p className="text-gray-600">
+                      En regnradarstation har en räckvidd på cirka 24 mil och
+                      kan upptäcka regn inom detta område.
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                      <CloudLightning className="h-5 w-5 text-blue-600" />
+                      6. Kan en regnradar skilja mellan lätt och kraftigt regn?
+                    </h3>
+                    <p className="text-gray-600">
+                      Ja, regnradarn kan mäta regndropparnas storlek och
+                      intensitet, vilket gör det möjligt att skilja mellan
+                      duggregn, normalt regn och skyfall.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-blue-600" />
+                      7. Vad kan störa en regnradars bild av regn?
+                    </h3>
+                    <p className="text-gray-600">
+                      Atmosfäriska störningar, tekniska problem och hinder som
+                      berg kan påverka regnradarns förmåga att ge en exakt bild
+                      av nederbörden.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                      <Map className="h-5 w-5 text-blue-600" />
+                      8. Finns det regnradar i Sverige?
+                    </h3>
+                    <p className="text-gray-600">
+                      Ja, Sverige har ett omfattande nätverk av
+                      regnradarstationer som övervakar regn och nederbörd i hela
+                      landet.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                      <Smartphone className="h-5 w-5 text-blue-600" />
+                      9. Kan jag följa regnradar i realtid?
+                    </h3>
+                    <p className="text-gray-600">
+                      Ja, det finns flera webbplatser och appar där du kan se
+                      regnradarbilder i realtid och följa regnets rörelse.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                      <Building className="h-5 w-5 text-blue-600" />
+                      10. Används regnradar för mer än att bara följa regn?
+                    </h3>
+                    <p className="text-gray-600">
+                      Ja, regnradar används även för att övervaka snö, hagel och
+                      andra typer av nederbörd samt för att förbättra
+                      väderprognoser.
+                    </p>
+                  </div>
+                </div>
               </div>
             </section>
           </div>
@@ -264,8 +399,9 @@ export default function Home() {
 
           <div className="bg-blue-50 p-4 rounded-lg">
             <p className="text-sm text-blue-800">
-              Radaranimationen visar nederbördsintensitet över Norden...
-            </p>
+            Radaranimationen visar nederbördsintensitet över Norden. Bilden
+              uppdateras automatiskt var 5:e minut. Starkare färger indikerar
+              kraftigare nederbörd.            </p>
           </div>
 
           <div className="flex w-full flex-col gap-y-3">
@@ -289,21 +425,21 @@ export default function Home() {
                     <MapPin className="h-8 w-8 text-blue-600" />
                   </div>
                   <h3 className="text-lg font-semibold mb-2">Välj plats</h3>
-                  <p className="text-gray-600">Välj din plats eller låt appen upptäcka den...</p>
+                  <p className="text-gray-600">Välj din plats eller låt appen upptäcka den.</p>
                 </div>
                 <div className="flex flex-col items-center text-center">
                   <div className="bg-blue-100 p-4 rounded-full mb-4">
                     <Cloud className="h-8 w-8 text-blue-600" />
                   </div>
                   <h3 className="text-lg font-semibold mb-2">Kolla prognosen</h3>
-                  <p className="text-gray-600">Se regnprognosen för ditt valda område...</p>
+                  <p className="text-gray-600">Se regnprognosen för ditt valda område.</p>
                 </div>
                 <div className="flex flex-col items-center text-center">
                   <div className="bg-blue-100 p-4 rounded-full mb-4">
                     <Droplets className="h-8 w-8 text-blue-600" />
                   </div>
                   <h3 className="text-lg font-semibold mb-2">Håll dig informerad</h3>
-                  <p className="text-gray-600">Få realtidsuppdateringar om regnmönster...</p>
+                  <p className="text-gray-600">Få realtidsuppdateringar om regnmönster.</p>
                 </div>
               </div>
             </div>
@@ -324,8 +460,11 @@ export default function Home() {
           <div className="mt-12 bg-blue-50 rounded-lg p-6 flex items-start">
             <Info className="h-6 w-6 text-blue-600 mr-4 flex-shrink-0 mt-1" />
             <p className="text-blue-800">
-              Våra avancerade algoritmer ger noggranna regnprognoser...
-            </p>
+            Våra avancerade algoritmer ger noggranna regnprognoser som hjälper
+            dig planera din dag effektivt. Oavsett om du planerar ett
+            utomhusevenemang eller bara vill veta om du behöver ett paraply, har
+            Regnkarta dig täckt!        
+                </p>
           </div>
 
           <div className="flex w-full flex-col gap-y-3">
