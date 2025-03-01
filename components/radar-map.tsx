@@ -19,11 +19,13 @@ const RadarMap: React.FC = () => {
   const [radarFrames, setRadarFrames] = useState<RadarFrame[] | null>(null);
   const [currentIndex, setCurrentIndex] = useState<number>(-12);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [isSliding, setIsSliding] = useState<boolean>(false);
   const [clock, setClock] = useState<string>(new Date().toLocaleTimeString());
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const rainViewerHost = useRef<string | null>(null);
   const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitialLoad = useRef(true); // Flagga för första laddningen
 
   /** Initialize the map and layers */
   useEffect(() => {
@@ -85,6 +87,19 @@ const RadarMap: React.FC = () => {
           frames.sort((a, b) => a.time - b.time);
           setRadarFrames(frames);
           rainViewerHost.current = data.host;
+
+          // Preload alla bilder sekventiellt
+          console.log(`${new Date().toISOString()} - Starting preload of all frames`);
+          for (const frame of frames) {
+            await preloadImage(`${data.host}${frame.path}/256/{z}/{x}/{y}/5/1_0.png`);
+          }
+          console.log(`${new Date().toISOString()} - Preload of all frames completed`);
+
+          if (layersRef.current[0] && data.host) {
+            layersRef.current[0].setUrl(`${data.host}${frames[0].path}/256/{z}/{x}/{y}/5/1_0.png`);
+            layersRef.current[0].setOpacity(0.7);
+            updateMapByIndex(-12, false); // Sätt första bilden direkt vid laddning
+          }
         }
       } catch (error) {
         console.error("Failed to fetch radar data:", error);
@@ -94,32 +109,23 @@ const RadarMap: React.FC = () => {
     fetchRadarData();
   }, []);
 
-  /** Preload next frame */
-  const preloadImage = (url: string) => {
-    const img = new Image();
-    img.src = url;
-  };
-
-  /** Find closest radar frame to timestamp */
-  const findClosestFrame = (frames: RadarFrame[], targetTimestamp: number) => {
-    return frames.reduce((prev, curr) =>
-      Math.abs(curr.time - targetTimestamp) <
-      Math.abs(prev.time - targetTimestamp)
-        ? curr
-        : prev
-    );
+  /** Preload image */
+  const preloadImage = (url: string): Promise<void> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = url;
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+    });
   };
 
   /** Update radar layer with ultra-smooth transition */
-  const updateMapByIndex = (index: number) => {
+  const updateMapByIndex = (index: number, isManual: boolean = false) => {
     if (!radarFrames || !rainViewerHost.current || !mapRef.current) return;
 
-    const minutesOffset = index * 10;
-    const targetTimestamp = Math.floor(
-      (Date.now() + minutesOffset * 60000) / 1000
-    );
-    const frame = findClosestFrame(radarFrames, targetTimestamp);
-    const tileUrl = `${rainViewerHost.current}${frame.path}/256/{z}/{x}/{y}/5/1_0.png`;
+    const frameIndex = index + 12; // Slider-fix: -12 -> 0, 4 -> 16 (clamped to 15)
+    const clampedFrameIndex = Math.max(0, Math.min(frameIndex, radarFrames.length - 1));
+    const tileUrl = `${rainViewerHost.current}${radarFrames[clampedFrameIndex].path}/256/{z}/{x}/{y}/5/1_0.png`;
 
     if (transitionTimeoutRef.current) {
       clearTimeout(transitionTimeoutRef.current);
@@ -129,37 +135,75 @@ const RadarMap: React.FC = () => {
     const nextLayer = layersRef.current[1];
     const bufferLayer = layersRef.current[2];
 
-    preloadImage(tileUrl);
-    bufferLayer.setUrl(tileUrl);
-    bufferLayer.setOpacity(0);
-
-    requestAnimationFrame(() => {
+    if (isManual) {
+      // Vid manuell slideranvändning: visa bilden direkt på currentLayer
       currentLayer.setOpacity(0);
-      nextLayer.setOpacity(0.7);
+      nextLayer.setOpacity(0);
+      bufferLayer.setOpacity(0);
+      currentLayer.setUrl(tileUrl);
+      requestAnimationFrame(() => {
+        currentLayer.setOpacity(0.7);
+      });
+    } else {
+      // Vid loop: använd lagerrotation för smidig övergång
+      if (index === -12 && currentIndex === 4) {
+        currentLayer.setOpacity(0);
+        nextLayer.setOpacity(0);
+        bufferLayer.setOpacity(0);
+        currentLayer.setUrl(tileUrl);
+        requestAnimationFrame(() => {
+          currentLayer.setOpacity(0.7);
+          transitionTimeoutRef.current = setTimeout(() => {
+            layersRef.current = [currentLayer, nextLayer, bufferLayer];
+          }, 400);
+        });
+      } else {
+        preloadImage(tileUrl);
+        bufferLayer.setUrl(tileUrl);
+        bufferLayer.setOpacity(0);
 
-      transitionTimeoutRef.current = setTimeout(() => {
-        layersRef.current = [nextLayer, bufferLayer, currentLayer];
-      }, 400);
-    });
+        requestAnimationFrame(() => {
+          currentLayer.setOpacity(0);
+          nextLayer.setOpacity(0.7);
+
+          transitionTimeoutRef.current = setTimeout(() => {
+            layersRef.current = [nextLayer, bufferLayer, currentLayer];
+          }, 400);
+        });
+      }
+    }
   };
 
   /** Animation logic */
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !radarFrames) return;
 
     const interval = setInterval(() => {
       if (!isPaused) {
-        setCurrentIndex((prevIndex) => (prevIndex >= 3 ? -12 : prevIndex + 1));
+        setCurrentIndex((prevIndex) => {
+          const nextIndex = prevIndex >= 4 ? -12 : prevIndex + 1;
+          if (isInitialLoad.current && prevIndex === -12) {
+            isInitialLoad.current = false; // Förhindra extra hopp vid start
+          } else {
+            updateMapByIndex(nextIndex, false); // Uppdatera direkt i loopen
+          }
+          return nextIndex;
+        });
       }
     }, 600);
 
     return () => clearInterval(interval);
-  }, [isPaused]);
+  }, [isPaused, radarFrames]);
 
-  /** Update radar frame */
+  /** Update radar frame for slider */
   useEffect(() => {
-    updateMapByIndex(currentIndex);
-  }, [currentIndex, radarFrames]);
+    if (isSliding) {
+      updateMapByIndex(currentIndex, true); // Manuell uppdatering vid slideranvändning
+    } else if (isInitialLoad.current && radarFrames) {
+      updateMapByIndex(currentIndex, false); // Sätt första bilden vid initial laddning
+      isInitialLoad.current = false;
+    }
+  }, [currentIndex, radarFrames, isSliding]);
 
   /** Update clock */
   useEffect(() => {
@@ -171,6 +215,17 @@ const RadarMap: React.FC = () => {
 
     return () => clearInterval(clockInterval);
   }, []);
+
+  /** Handle slider interaction start */
+  const handleSliderStart = () => {
+    setIsPaused(true);
+    setIsSliding(true);
+  };
+
+  /** Handle slider interaction end */
+  const handleSliderEnd = () => {
+    setIsSliding(false);
+  };
 
   /** Handle geolocation */
   const handleGetLocation = () => {
@@ -189,21 +244,16 @@ const RadarMap: React.FC = () => {
         }
 
         const customIcon = L.icon({
-          iconUrl:
-            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-          iconRetinaUrl:
-            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-          shadowUrl:
-            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+          iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+          iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+          shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
           iconSize: [25, 41],
           iconAnchor: [12, 41],
           popupAnchor: [1, -34],
           shadowSize: [41, 41],
         });
 
-        markerRef.current = L.marker([latitude, longitude], {
-          icon: customIcon,
-        }).addTo(mapRef.current);
+        markerRef.current = L.marker([latitude, longitude], { icon: customIcon }).addTo(mapRef.current);
         mapRef.current.setView([latitude, longitude], 7);
 
         setIsLoading(false);
@@ -258,10 +308,14 @@ const RadarMap: React.FC = () => {
             <input
               type="range"
               min="-12"
-              max="3"
+              max="4"
               value={currentIndex}
               step="1"
               onChange={(e) => setCurrentIndex(Number(e.target.value))}
+              onMouseDown={handleSliderStart}
+              onTouchStart={handleSliderStart}
+              onMouseUp={handleSliderEnd}
+              onTouchEnd={handleSliderEnd}
               className="w-full"
             />
           </div>
