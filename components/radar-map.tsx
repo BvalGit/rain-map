@@ -17,7 +17,6 @@ const RadarMap: React.FC = () => {
   const layersRef = useRef<L.TileLayer[]>([]);
   const markerRef = useRef<L.Marker | null>(null);
   const [radarFrames, setRadarFrames] = useState<RadarFrame[] | null>(null);
-  // Vi fortsätter med currentIndex som tidsskillnad (i steg om 10 minuter)
   const [currentIndex, setCurrentIndex] = useState<number>(-12);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [clock, setClock] = useState<string>(new Date().toLocaleTimeString());
@@ -190,7 +189,8 @@ const RadarMap: React.FC = () => {
         }
 
         const customIcon = L.icon({
-          iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+          iconUrl:
+            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
           iconRetinaUrl:
             "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
           shadowUrl:
@@ -201,8 +201,10 @@ const RadarMap: React.FC = () => {
           shadowSize: [41, 41],
         });
 
-        markerRef.current = L.marker([latitude, longitude], { icon: customIcon }).addTo(mapRef.current);
-        mapRef.current.setView([latitude, longitude], 7); // Zoomar ut till nivå 7
+        markerRef.current = L.marker([latitude, longitude], {
+          icon: customIcon,
+        }).addTo(mapRef.current);
+        mapRef.current.setView([latitude, longitude], 7);
 
         setIsLoading(false);
       },
@@ -213,30 +215,6 @@ const RadarMap: React.FC = () => {
       }
     );
   };
-
-  // Beräkna aktuell radarbild baserat på currentIndex
-  const currentFrame =
-    radarFrames && rainViewerHost.current
-      ? findClosestFrame(
-          radarFrames,
-          Math.floor((Date.now() + currentIndex * 10 * 60000) / 1000)
-        )
-      : null;
-
-  // Skapa schema baserat på den beräknade bilden
-  const weatherForecastSchema = currentFrame
-    ? {
-        "@context": "https://schema.org/",
-        "@type": "WeatherForecast",
-        "name": "Regnradar för Sverige och världen",
-        "url": "https://regnkarta.se/regnradar",
-        "datePublished": new Date(currentFrame.time * 1000).toISOString(),
-        "location": {
-          "@type": "Place",
-          "name": "Sweden",
-        },
-      }
-    : null;
 
   return (
     <>
@@ -249,12 +227,6 @@ const RadarMap: React.FC = () => {
           background: #fff;
         }
       `}</style>
-      {weatherForecastSchema && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(weatherForecastSchema) }}
-        />
-      )}
       <div className="flex flex-col relative text-center bg-white text-black">
         <div id="map" className="w-full h-[600px] relative rounded-lg"></div>
 
