@@ -14,15 +14,15 @@ interface RadarFrame {
 
 const RadarMap: React.FC = () => {
   const mapRef = useRef<L.Map | null>(null);
-  const currentLayerRef = useRef<L.TileLayer | null>(null);
-  const nextLayerRef = useRef<L.TileLayer | null>(null);
+  const layersRef = useRef<L.TileLayer[]>([]);
   const [radarFrames, setRadarFrames] = useState<RadarFrame[] | null>(null);
   const [currentIndex, setCurrentIndex] = useState<number>(-12);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [clock, setClock] = useState<string>(new Date().toLocaleTimeString());
   const rainViewerHost = useRef<string | null>(null);
+  const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  /** Initialize the map */
+  /** Initialize the map and layers */
   useEffect(() => {
     if (typeof window === "undefined" || !L) return;
 
@@ -30,14 +30,38 @@ const RadarMap: React.FC = () => {
       mapRef.current = L.map("map", {
         center: [63.0, 14.0],
         zoom: 5,
+        fadeAnimation: true,
+        zoomAnimation: false, // Disable zoom animation to reduce flicker
       });
 
       L.tileLayer(
         "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
         {
-          attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+          attribution: "© OpenStreetMap contributors © CARTO",
         }
       ).addTo(mapRef.current);
+
+      // Create three layers for smooth transitions
+      layersRef.current = [
+        L.tileLayer("", {
+          opacity: 0,
+          attribution: "Radar data © RainViewer",
+          tileSize: 256,
+          noWrap: true,
+        }).addTo(mapRef.current),
+        L.tileLayer("", {
+          opacity: 0,
+          attribution: "Radar data © RainViewer",
+          tileSize: 256,
+          noWrap: true,
+        }).addTo(mapRef.current),
+        L.tileLayer("", {
+          opacity: 0,
+          attribution: "Radar data © RainViewer",
+          tileSize: 256,
+          noWrap: true,
+        }).addTo(mapRef.current),
+      ];
     }
   }, []);
 
@@ -68,6 +92,12 @@ const RadarMap: React.FC = () => {
     fetchRadarData();
   }, []);
 
+  /** Preload next frame */
+  const preloadImage = (url: string) => {
+    const img = new Image();
+    img.src = url;
+  };
+
   /** Find closest radar frame to timestamp */
   const findClosestFrame = (frames: RadarFrame[], targetTimestamp: number) => {
     return frames.reduce((prev, curr) =>
@@ -78,48 +108,50 @@ const RadarMap: React.FC = () => {
     );
   };
 
-  /** Update radar layer with ultra-fast transition */
+  /** Update radar layer with ultra-smooth transition */
   const updateMapByIndex = (index: number) => {
-    if (
-      !radarFrames ||
-      !rainViewerHost.current ||
-      typeof window === "undefined"
-    )
-      return;
+    if (!radarFrames || !rainViewerHost.current || !mapRef.current) return;
 
-    let minutesOffset = index * 10;
+    const minutesOffset = index * 10;
     const targetTimestamp = Math.floor(
       (Date.now() + minutesOffset * 60000) / 1000
     );
     const frame = findClosestFrame(radarFrames, targetTimestamp);
     const tileUrl = `${rainViewerHost.current}${frame.path}/256/{z}/{x}/{y}/5/1_0.png`;
 
-    // Create new layer with ultra-fast fade-in effect
-    if (nextLayerRef.current) {
-      nextLayerRef.current.setUrl(tileUrl);
-      nextLayerRef.current.setOpacity(0.7);
-
-      // Swap layers faster (200ms instead of 300ms)
-      setTimeout(() => {
-        if (currentLayerRef.current) {
-          mapRef.current?.removeLayer(currentLayerRef.current);
-        }
-        currentLayerRef.current = nextLayerRef.current;
-        nextLayerRef.current = null;
-      }, 200);
-    } else {
-      nextLayerRef.current = L.tileLayer(tileUrl, {
-        opacity: 0,
-        attribution: "Radar data © RainViewer",
-      }).addTo(mapRef.current!);
-
-      setTimeout(() => {
-        nextLayerRef.current?.setOpacity(0.7);
-      }, 100);
+    // Clear any existing transition timeout
+    if (transitionTimeoutRef.current) {
+      clearTimeout(transitionTimeoutRef.current);
     }
+
+    // Get current and next layers
+    const currentLayer = layersRef.current[0];
+    const nextLayer = layersRef.current[1];
+    const bufferLayer = layersRef.current[2];
+
+    // Preload the next frame
+    preloadImage(tileUrl);
+
+    // Set URL on buffer layer first (invisible)
+    bufferLayer.setUrl(tileUrl);
+    bufferLayer.setOpacity(0);
+
+    // Smooth transition
+    requestAnimationFrame(() => {
+      // Fade out current layer
+      currentLayer.setOpacity(0);
+      // Fade in next layer
+      nextLayer.setOpacity(0.7);
+
+      // Prepare buffer for next transition
+      transitionTimeoutRef.current = setTimeout(() => {
+        // Rotate layers: buffer becomes current, current becomes next, next becomes buffer
+        layersRef.current = [nextLayer, bufferLayer, currentLayer];
+      }, 400); // Slightly longer than CSS transition
+    });
   };
 
-  /** Animation logic (4x Speed - Ultra Fast) */
+  /** Animation logic */
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -127,7 +159,7 @@ const RadarMap: React.FC = () => {
       if (!isPaused) {
         setCurrentIndex((prevIndex) => (prevIndex >= 3 ? -12 : prevIndex + 1));
       }
-    }, 500); // 🚀 4x Speed (500ms instead of 1500ms)
+    }, 600); // Slightly slower to ensure smooth transitions
 
     return () => clearInterval(interval);
   }, [isPaused]);
@@ -150,6 +182,15 @@ const RadarMap: React.FC = () => {
 
   return (
     <>
+      <style jsx>{`
+        .leaflet-tile {
+          transition: opacity 0.4s ease-in-out;
+          will-change: opacity; /* Hint to browser for optimization */
+        }
+        .leaflet-container {
+          background: #fff; /* Prevent background flicker */
+        }
+      `}</style>
       <div className="fixed top-2 right-2 bg-white p-2 rounded shadow-md z-50">
         <span>{clock}</span>
       </div>
