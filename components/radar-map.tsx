@@ -1,7 +1,7 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { MapPin } from "lucide-react";
+import { MapPin, PauseIcon, PlayIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 
@@ -15,10 +15,13 @@ interface RadarFrame {
 const RadarMap: React.FC = () => {
   const mapRef = useRef<L.Map | null>(null);
   const layersRef = useRef<L.TileLayer[]>([]);
+  const markerRef = useRef<L.Marker | null>(null);
   const [radarFrames, setRadarFrames] = useState<RadarFrame[] | null>(null);
   const [currentIndex, setCurrentIndex] = useState<number>(-12);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [clock, setClock] = useState<string>(new Date().toLocaleTimeString());
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const rainViewerHost = useRef<string | null>(null);
   const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -31,7 +34,7 @@ const RadarMap: React.FC = () => {
         center: [63.0, 14.0],
         zoom: 5,
         fadeAnimation: true,
-        zoomAnimation: false, // Disable zoom animation to reduce flicker
+        zoomAnimation: false,
       });
 
       L.tileLayer(
@@ -41,7 +44,6 @@ const RadarMap: React.FC = () => {
         }
       ).addTo(mapRef.current);
 
-      // Create three layers for smooth transitions
       layersRef.current = [
         L.tileLayer("", {
           opacity: 0,
@@ -119,35 +121,25 @@ const RadarMap: React.FC = () => {
     const frame = findClosestFrame(radarFrames, targetTimestamp);
     const tileUrl = `${rainViewerHost.current}${frame.path}/256/{z}/{x}/{y}/5/1_0.png`;
 
-    // Clear any existing transition timeout
     if (transitionTimeoutRef.current) {
       clearTimeout(transitionTimeoutRef.current);
     }
 
-    // Get current and next layers
     const currentLayer = layersRef.current[0];
     const nextLayer = layersRef.current[1];
     const bufferLayer = layersRef.current[2];
 
-    // Preload the next frame
     preloadImage(tileUrl);
-
-    // Set URL on buffer layer first (invisible)
     bufferLayer.setUrl(tileUrl);
     bufferLayer.setOpacity(0);
 
-    // Smooth transition
     requestAnimationFrame(() => {
-      // Fade out current layer
       currentLayer.setOpacity(0);
-      // Fade in next layer
       nextLayer.setOpacity(0.7);
 
-      // Prepare buffer for next transition
       transitionTimeoutRef.current = setTimeout(() => {
-        // Rotate layers: buffer becomes current, current becomes next, next becomes buffer
         layersRef.current = [nextLayer, bufferLayer, currentLayer];
-      }, 400); // Slightly longer than CSS transition
+      }, 400);
     });
   };
 
@@ -159,7 +151,7 @@ const RadarMap: React.FC = () => {
       if (!isPaused) {
         setCurrentIndex((prevIndex) => (prevIndex >= 3 ? -12 : prevIndex + 1));
       }
-    }, 600); // Slightly slower to ensure smooth transitions
+    }, 600);
 
     return () => clearInterval(interval);
   }, [isPaused]);
@@ -180,39 +172,106 @@ const RadarMap: React.FC = () => {
     return () => clearInterval(clockInterval);
   }, []);
 
+  /** Handle geolocation */
+  const handleGetLocation = () => {
+    if (!mapRef.current || typeof window === "undefined" || !L) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        console.log(`Latitud: ${latitude}, Longitud: ${longitude}`);
+
+        if (markerRef.current) {
+          mapRef.current.removeLayer(markerRef.current);
+        }
+
+        const customIcon = L.icon({
+          iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+          iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+          shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41],
+        });
+
+        markerRef.current = L.marker([latitude, longitude], { icon: customIcon }).addTo(mapRef.current);
+        mapRef.current.setView([latitude, longitude], 9); // Ändrat till 9 för att zooma ut ett steg
+
+        setIsLoading(false);
+      },
+      (err) => {
+        setError("Kunde inte hämta din plats. Kontrollera platstjänster.");
+        setIsLoading(false);
+        console.error(err.message);
+      }
+    );
+  };
+
+  // Schema för WeatherForecast (regnradarbilder)
+  const weatherForecastSchema =
+    radarFrames &&
+    rainViewerHost.current &&
+    radarFrames[currentIndex]?.time !== undefined
+      ? {
+          "@context": "https://schema.org/",
+          "@type": "WeatherForecast",
+          "name": "Regnradar för Sverige och världen",
+          "url": "https://regnkarta.se/regnradar",
+          "datePublished": new Date(radarFrames[currentIndex].time * 1000).toISOString(),
+          "location": {
+            "@type": "Place",
+            "name": "Sweden",
+          },
+        }
+      : null;
+
   return (
     <>
       <style jsx>{`
         .leaflet-tile {
           transition: opacity 0.4s ease-in-out;
-          will-change: opacity; /* Hint to browser for optimization */
+          will-change: opacity;
         }
         .leaflet-container {
-          background: #fff; /* Prevent background flicker */
+          background: #fff;
         }
       `}</style>
-      {/* <div className="fixed top-2 right-2 bg-white p-2 rounded shadow-md z-50">
-        <span>{clock}</span>
-      </div> */}
+      {weatherForecastSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(weatherForecastSchema) }}
+        />
+      )}
       <div className="flex flex-col relative text-center bg-white text-black">
         <div id="map" className="w-full h-[600px] relative rounded-lg"></div>
-        <button
-          type="button"
-          onClick={() =>
-            navigator.geolocation.getCurrentPosition((position) => {
-              console.log(position.coords.latitude, position.coords.longitude);
-            })
-          }
-          className="z-[999] flex items-center gap-x-2 bg-blue-500 right-4 bottom-32 sm:bottom-20 absolute text-white px-4 py-2 rounded-lg"
-        >
-          Se din plats på kartan
-          <MapPin />
-        </button>
-        <p className=" absolute text-white px-4 py-2 rounded-lg flex items-center gap-x-2 justify-center bg-blue-500 w-[11rem] bottom-[5rem] left-4 z-[999]">
-          {currentIndex * 10 > 0
-            ? `Om ${currentIndex * 10} min`
-            : `För ${-currentIndex * 10} min sedan`}
-        </p>
+
+        <div className="absolute bottom-24 sm:bottom-20 left-0 flex flex-row justify-between w-full z-[999] px-4">
+          <p className="text-white px-4 py-2 rounded-lg flex items-center gap-x-2 justify-center bg-blue-500 w-[8.8rem]">
+            {currentIndex * 10 > 0
+              ? `Om ${currentIndex * 10} min`
+              : `${-currentIndex * 10} min sedan`}
+          </p>
+          <button
+            type="button"
+            onClick={handleGetLocation}
+            className="flex items-center gap-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <span>Laddar...</span>
+            ) : (
+              <>
+                Din plats på kartan
+                <MapPin className="h-5 w-5" />
+              </>
+            )}
+          </button>
+        </div>
+
         <div className="flex absolute bottom-14 sm:bottom-6 h-fit inset-x-0 px-4 w-full z-[999] gap-x-4">
           <div className="flex justify-center w-full items-center bg-gray-200 rounded-lg px-4 gap-2">
             <input
@@ -229,9 +288,19 @@ const RadarMap: React.FC = () => {
             onClick={() => setIsPaused(!isPaused)}
             className="h-full px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600"
           >
-            {isPaused ? "Spela" : "Pausa"}
+            {isPaused ? (
+              <PlayIcon className="h-5 w-5" />
+            ) : (
+              <PauseIcon className="h-5 w-5" />
+            )}
           </button>
         </div>
+
+        {error && (
+          <p className="absolute bottom-32 left-4 text-red-500 bg-white p-2 rounded-lg z-[999]">
+            {error}
+          </p>
+        )}
       </div>
     </>
   );
