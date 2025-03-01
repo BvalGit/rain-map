@@ -173,50 +173,39 @@ export default function Home() {
                 </p>
 
                 <div className="grid md:grid-cols-3 gap-8 mt-8">
-                  <div className="bg-blue-50 p-6 rounded-lg">
-                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <CloudRain className="h-5 w-5 text-blue-600" />
-                      Dopplerteknik och regnradar
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Dopplertekniken är en central komponent i regnradarsystem,
-                      vilket möjliggör noggrann övervakning av regn och dess
-                      rörelse. Genom att analysera förändringar i radarvågornas
-                      frekvens kan regnradarn inte bara upptäcka nederbörd utan
-                      även ge värdefull information om vindmönster och regnets
-                      intensitet.
-                    </p>
-                  </div>
+  <div className="bg-blue-50 p-6 rounded-lg flex flex-col h-full">
+    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+      <CloudRain className="h-5 w-5 text-blue-600" />
+      Dopplerteknik och regnradar
+    </h3>
+    <p className="text-sm text-gray-600 pb-2">
+      Dopplertekniken är en central komponent i regnradarsystem, vilket möjliggör noggrann övervakning av regn och dess rörelse. Genom att analysera förändringar i radarvågornas frekvens kan regnradarn inte bara upptäcka nederbörd utan även ge värdefull information om vindmönster och regnets intensitet.
+    </p>
+    <img className="rounded-lg mt-auto pt-1" src="/regnradar.webp" alt="Regnradar" />
+  </div>
 
-                  <div className="bg-blue-50 p-6 rounded-lg">
-                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <Radar className="h-5 w-5 text-blue-600" />
-                      Regnradarstationer i Norden
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Norden har ett välutvecklat nätverk av regnradarstationer
-                      som täcker Sverige, Norge och Finland. Dessa
-                      radarstationer arbetar tillsammans för att ge en
-                      heltäckande bild av regn och nederbörd i realtid, vilket
-                      förbättrar väderprognoser och varningar för kraftigt regn.
-                    </p>
-                  </div>
+  <div className="bg-blue-50 p-6 rounded-lg flex flex-col h-full">
+    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+      <Radar className="h-5 w-5 text-blue-600" />
+      Regnradarstationer i Norden
+    </h3>
+    <p className="text-sm text-gray-600">
+      Norden har ett välutvecklat nätverk av regnradarstationer som täcker Sverige, Norge och Finland. Dessa radarstationer arbetar tillsammans för att ge en heltäckande bild av regn och nederbörd i realtid, vilket förbättrar väderprognoser och varningar för kraftigt regn.
+    </p>
+    <img className="rounded-lg mt-auto pt-1" src="/regnradarstation.webp" alt="Regnradarstation" />
+  </div>
 
-                  <div className="bg-blue-50 p-6 rounded-lg">
-                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                      <Info className="h-5 w-5 text-blue-600" />
-                      Räckvidd och täckning
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      En regnradarstation har en räckvidd på cirka 24 mil och
-                      kan effektivt detektera regn och nederbörd inom detta
-                      område. Genom att kombinera data från flera radarstationer
-                      skapas en mer detaljerad och exakt bild av regnvädret,
-                      vilket hjälper både meteorologer och allmänheten att följa
-                      regnets utveckling.
-                    </p>
-                  </div>
-                </div>
+  <div className="bg-blue-50 p-6 rounded-lg flex flex-col h-full">
+    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+      <Info className="h-5 w-5 text-blue-600" />
+      Räckvidd och täckning
+    </h3>
+    <p className="text-sm text-gray-600">
+      En regnradarstation har en räckvidd på cirka 24 mil och kan effektivt detektera regn och nederbörd inom detta område. Genom att kombinera data från flera radarstationer skapas en mer detaljerad och exakt bild av regnvädret, vilket hjälper både meteorologer och allmänheten att följa regnets utveckling.
+    </p>
+    <img className="rounded-lg mt-auto pt-1" src="/regnradar-i-sverige.webp" alt="Regnradar i Sverige" />
+  </div>
+</div>
               </div>
             </section>
 

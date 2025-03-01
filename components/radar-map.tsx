@@ -191,9 +191,9 @@ const RadarMap: React.FC = () => {
           background: #fff; /* Prevent background flicker */
         }
       `}</style>
-      <div className="fixed top-2 right-2 bg-white p-2 rounded shadow-md z-50">
+      {/* <div className="fixed top-2 right-2 bg-white p-2 rounded shadow-md z-50">
         <span>{clock}</span>
-      </div>
+      </div> */}
       <div className="flex flex-col relative text-center bg-white text-black">
         <div id="map" className="w-full h-[600px] relative rounded-lg"></div>
         <button
@@ -208,7 +208,7 @@ const RadarMap: React.FC = () => {
           Se din plats på kartan
           <MapPin />
         </button>
-        <p className="text-lg font-bold absolute top-4 right-4 z-[999]">
+        <p className=" absolute text-white px-4 py-2 rounded-lg flex items-center gap-x-2 justify-center bg-blue-500 w-[11rem] bottom-[5rem] left-4 z-[999]">
           {currentIndex * 10 > 0
             ? `Om ${currentIndex * 10} min`
             : `För ${-currentIndex * 10} min sedan`}
