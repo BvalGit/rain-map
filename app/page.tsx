@@ -84,12 +84,13 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm">
+      <link rel="icon" type="image/png" href="/favicon.webp" />
         <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-800">Regnkarta</h2>
+          <img className="w-64" src="/header.webp"></img>
         </div>
       </header>
 
-      <div className="flex w-full flex-col gap-y-3">
+      {/* <div className="flex w-full flex-col gap-y-3">
         <p className="text-center">Annons</p>
         <ins
           className="adsbygoogle"
@@ -99,7 +100,7 @@ export default function Home() {
           data-ad-client="ca-pub-5578135265480546"
           data-ad-slot="4810609678"
         ></ins>
-      </div>
+      </div> */}
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Radar Map */}
