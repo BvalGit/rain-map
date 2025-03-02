@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: '/',
     },
-    sitemap: 'https://regnkarta.se/sitemap.xml',
+    sitemap: 'https://www.regnkarta.se/sitemap.xml',
   }
 }
