@@ -1,33 +1,27 @@
 "use client";
 
+import { RadarFrame } from "@/types";
 import "leaflet/dist/leaflet.css";
 import { MapPin, PauseIcon, PlayIcon } from "lucide-react";
-import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 
 const L = typeof window !== "undefined" ? require("leaflet") : null;
 
-interface RadarFrame {
-  time: number;
-  path: string;
-}
-
 const RadarMap: React.FC = () => {
+  const isInitialLoad = useRef(true);
   const mapRef = useRef<L.Map | null>(null);
   const layersRef = useRef<L.TileLayer[]>([]);
   const markerRef = useRef<L.Marker | null>(null);
+  const rainViewerHost = useRef<string | null>(null);
+  const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const [radarFrames, setRadarFrames] = useState<RadarFrame[] | null>(null);
   const [currentIndex, setCurrentIndex] = useState<number>(-12);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isSliding, setIsSliding] = useState<boolean>(false);
-  const [clock, setClock] = useState<string>(new Date().toLocaleTimeString());
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const rainViewerHost = useRef<string | null>(null);
-  const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isInitialLoad = useRef(true); // Flagga för första laddningen
 
-  /** Initialize the map and layers */
   useEffect(() => {
     if (typeof window === "undefined" || !L) return;
 
@@ -69,7 +63,6 @@ const RadarMap: React.FC = () => {
     }
   }, []);
 
-  /** Fetch radar frames */
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -87,16 +80,15 @@ const RadarMap: React.FC = () => {
           frames.sort((a, b) => a.time - b.time);
           setRadarFrames(frames);
           rainViewerHost.current = data.host;
-
-          // Preload alla bilder sekventiellt
-          console.log(`${new Date().toISOString()} - Starting preload of all frames`);
           for (const frame of frames) {
-            await preloadImage(`${data.host}${frame.path}/256/{z}/{x}/{y}/5/1_0.png`);
+            await preloadImage(
+              `${data.host}${frame.path}/256/{z}/{x}/{y}/5/1_0.png`
+            );
           }
-          console.log(`${new Date().toISOString()} - Preload of all frames completed`);
-
           if (layersRef.current[0] && data.host) {
-            layersRef.current[0].setUrl(`${data.host}${frames[0].path}/256/{z}/{x}/{y}/5/1_0.png`);
+            layersRef.current[0].setUrl(
+              `${data.host}${frames[0].path}/256/{z}/{x}/{y}/5/1_0.png`
+            );
             layersRef.current[0].setOpacity(0.7);
             updateMapByIndex(-12, false); // Sätt första bilden direkt vid laddning
           }
@@ -109,7 +101,6 @@ const RadarMap: React.FC = () => {
     fetchRadarData();
   }, []);
 
-  /** Preload image */
   const preloadImage = (url: string): Promise<void> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -119,12 +110,14 @@ const RadarMap: React.FC = () => {
     });
   };
 
-  /** Update radar layer with ultra-smooth transition */
   const updateMapByIndex = (index: number, isManual: boolean = false) => {
     if (!radarFrames || !rainViewerHost.current || !mapRef.current) return;
 
-    const frameIndex = index + 12; // Slider-fix: -12 -> 0, 4 -> 16 (clamped to 15)
-    const clampedFrameIndex = Math.max(0, Math.min(frameIndex, radarFrames.length - 1));
+    const frameIndex = index + 12;
+    const clampedFrameIndex = Math.max(
+      0,
+      Math.min(frameIndex, radarFrames.length - 1)
+    );
     const tileUrl = `${rainViewerHost.current}${radarFrames[clampedFrameIndex].path}/256/{z}/{x}/{y}/5/1_0.png`;
 
     if (transitionTimeoutRef.current) {
@@ -136,7 +129,6 @@ const RadarMap: React.FC = () => {
     const bufferLayer = layersRef.current[2];
 
     if (isManual) {
-      // Vid manuell slideranvändning: visa bilden direkt på currentLayer
       currentLayer.setOpacity(0);
       nextLayer.setOpacity(0);
       bufferLayer.setOpacity(0);
@@ -145,7 +137,6 @@ const RadarMap: React.FC = () => {
         currentLayer.setOpacity(0.7);
       });
     } else {
-      // Vid loop: använd lagerrotation för smidig övergång
       if (index === -12 && currentIndex === 4) {
         currentLayer.setOpacity(0);
         nextLayer.setOpacity(0);
@@ -174,7 +165,6 @@ const RadarMap: React.FC = () => {
     }
   };
 
-  /** Animation logic */
   useEffect(() => {
     if (typeof window === "undefined" || !radarFrames) return;
 
@@ -183,9 +173,9 @@ const RadarMap: React.FC = () => {
         setCurrentIndex((prevIndex) => {
           const nextIndex = prevIndex >= 4 ? -12 : prevIndex + 1;
           if (isInitialLoad.current && prevIndex === -12) {
-            isInitialLoad.current = false; // Förhindra extra hopp vid start
+            isInitialLoad.current = false;
           } else {
-            updateMapByIndex(nextIndex, false); // Uppdatera direkt i loopen
+            updateMapByIndex(nextIndex, false);
           }
           return nextIndex;
         });
@@ -195,39 +185,24 @@ const RadarMap: React.FC = () => {
     return () => clearInterval(interval);
   }, [isPaused, radarFrames]);
 
-  /** Update radar frame for slider */
   useEffect(() => {
     if (isSliding) {
-      updateMapByIndex(currentIndex, true); // Manuell uppdatering vid slideranvändning
+      updateMapByIndex(currentIndex, true);
     } else if (isInitialLoad.current && radarFrames) {
-      updateMapByIndex(currentIndex, false); // Sätt första bilden vid initial laddning
+      updateMapByIndex(currentIndex, false);
       isInitialLoad.current = false;
     }
   }, [currentIndex, radarFrames, isSliding]);
 
-  /** Update clock */
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const clockInterval = setInterval(() => {
-      setClock(new Date().toLocaleTimeString());
-    }, 1000);
-
-    return () => clearInterval(clockInterval);
-  }, []);
-
-  /** Handle slider interaction start */
   const handleSliderStart = () => {
     setIsPaused(true);
     setIsSliding(true);
   };
 
-  /** Handle slider interaction end */
   const handleSliderEnd = () => {
     setIsSliding(false);
   };
 
-  /** Handle geolocation */
   const handleGetLocation = () => {
     if (!mapRef.current || typeof window === "undefined" || !L) return;
 
@@ -240,21 +215,26 @@ const RadarMap: React.FC = () => {
         console.log(`Latitud: ${latitude}, Longitud: ${longitude}`);
 
         if (markerRef.current) {
-          mapRef.current.removeLayer(markerRef.current);
+          mapRef.current?.removeLayer(markerRef.current);
         }
 
         const customIcon = L.icon({
-          iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-          iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-          shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+          iconUrl:
+            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+          iconRetinaUrl:
+            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+          shadowUrl:
+            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
           iconSize: [25, 41],
           iconAnchor: [12, 41],
           popupAnchor: [1, -34],
           shadowSize: [41, 41],
         });
 
-        markerRef.current = L.marker([latitude, longitude], { icon: customIcon }).addTo(mapRef.current);
-        mapRef.current.setView([latitude, longitude], 7);
+        markerRef.current = L.marker([latitude, longitude], {
+          icon: customIcon,
+        }).addTo(mapRef.current);
+        mapRef.current?.setView([latitude, longitude], 7);
 
         setIsLoading(false);
       },
@@ -268,17 +248,8 @@ const RadarMap: React.FC = () => {
 
   return (
     <>
-      <style jsx>{`
-        .leaflet-tile {
-          transition: opacity 0.4s ease-in-out;
-          will-change: opacity;
-        }
-        .leaflet-container {
-          background: #fff;
-        }
-      `}</style>
       <div className="flex flex-col relative text-center bg-white text-black">
-        <div id="map" className="w-full h-[600px] relative rounded-lg"></div>
+        <div id="map" className="w-full h-[60vh] relative rounded-lg"></div>
 
         <div className="absolute bottom-24 sm:bottom-20 left-0 flex flex-row justify-between w-full z-[999] px-4">
           <p className="text-white px-4 py-2 rounded-lg flex items-center gap-x-2 justify-center bg-blue-500 w-[8.8rem]">
@@ -341,4 +312,4 @@ const RadarMap: React.FC = () => {
   );
 };
 
-export default dynamic(() => Promise.resolve(RadarMap), { ssr: false });
+export default RadarMap;
